@@ -1,0 +1,418 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face{font-family:Anton;src:url(node_modules/@fontsource/anton/files/anton-latin-400-normal.woff2)}
+@font-face{font-family:Inter;font-weight:700;src:url(node_modules/@fontsource/inter/files/inter-latin-700-normal.woff2)}
+@font-face{font-family:Inter;font-weight:900;src:url(node_modules/@fontsource/inter/files/inter-latin-900-normal.woff2)}
+:root{--o:#ff9d1c;--g:#ffd45a;--c:#28e0ff;--r:#ff2e4d;--v:#8b5cff}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#05060d;font-family:Inter,sans-serif;color:#fff}
+#stage{position:absolute;inset:0;width:1080px;height:1920px;overflow:hidden;transform-origin:50% 50%}
+canvas#gl{position:absolute;inset:0}
+.abs{position:absolute}
+.sc{position:absolute;inset:0;pointer-events:none;opacity:0}
+.an{font-family:Anton,Impact,sans-serif;text-transform:uppercase;letter-spacing:2px;line-height:.95}
+.ctr{position:absolute;left:0;right:0;text-align:center}
+.grad{background:linear-gradient(180deg,#fff6c8 0%,#ffd45a 35%,#ff9d1c 70%,#d9480f 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.glow{filter:drop-shadow(0 0 28px rgba(255,157,28,.65))}
+.card{position:absolute;border-radius:44px;background:linear-gradient(160deg,rgba(255,255,255,.14),rgba(255,255,255,.04));border:2px solid rgba(255,255,255,.22);backdrop-filter:blur(18px);box-shadow:0 30px 80px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.35)}
+#vig{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,transparent 45%,rgba(0,0,0,.72) 100%);pointer-events:none}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;mix-blend-mode:screen}
+#red{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,transparent 30%,rgba(255,30,60,.85) 100%);opacity:0;pointer-events:none}
+#grain{position:absolute;inset:-100px;opacity:.09;pointer-events:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/></filter><rect width='300' height='300' filter='url(%23n)'/></svg>")}
+#cap{position:absolute;left:40px;right:40px;top:1195px;height:220px;text-align:center;pointer-events:none}
+.capw{display:inline-block;font-family:Anton;font-size:128px;text-transform:uppercase;letter-spacing:2px;color:#fff;-webkit-text-stroke:10px #000;paint-order:stroke fill;text-shadow:0 10px 0 #000,0 16px 40px rgba(0,0,0,.6);margin:0 12px;line-height:1.05}
+.capw.hot{color:var(--g)}
+#prog{position:absolute;left:0;top:0;height:10px;background:linear-gradient(90deg,var(--o),var(--g));box-shadow:0 0 22px var(--o);z-index:50}
+#tag{position:absolute;left:44px;top:120px;display:flex;gap:14px;align-items:center;font-weight:900;font-size:30px;letter-spacing:3px}
+#tag i{width:16px;height:16px;border-radius:50%;background:var(--r);box-shadow:0 0 16px var(--r)}
+#brand{position:absolute;left:0;right:0;top:1500px;text-align:center;font-weight:900;font-size:36px;letter-spacing:6px;color:rgba(255,255,255,.9);text-shadow:0 4px 20px #000}
+#brand b{color:var(--g)}
+.chip{display:inline-block;padding:14px 30px;border-radius:999px;font-weight:900;font-size:34px;letter-spacing:3px;background:rgba(0,0,0,.55);border:2px solid rgba(255,255,255,.3)}
+.btn{position:absolute;left:110px;right:110px;height:150px;border-radius:80px;display:flex;align-items:center;gap:34px;padding:0 50px;font-family:Anton;font-size:76px;letter-spacing:3px;text-transform:uppercase;box-shadow:0 20px 60px rgba(0,0,0,.5),inset 0 3px 0 rgba(255,255,255,.5)}
+.ic{width:84px;height:84px;flex:none}
+</style></head>
+<body>
+<div id="stage">
+<canvas id="gl" width="1080" height="1920"></canvas>
+<div id="vig"></div>
+
+<!-- A HOOK -->
+<div class="sc" id="A">
+  <div class="ctr an" id="A_tag" style="top:330px;font-size:54px;color:var(--r);letter-spacing:12px">&#9888; TOURNAMENT ALERT</div>
+  <div class="ctr an grad glow" id="A_b" style="top:400px;font-size:430px"></div>
+  <div class="ctr an" id="A_p" style="top:780px;font-size:190px;color:#fff;-webkit-text-stroke:0"></div>
+  <div class="ctr an" id="A_r" style="top:790px;font-size:170px;color:#fff"></div>
+</div>
+
+<!-- B DATE + TIME -->
+<div class="sc" id="B">
+  <div class="abs" id="B_cal" style="left:150px;top:300px;width:780px;height:760px;perspective:1600px">
+    <div id="B_calin" style="position:absolute;inset:0;transform-origin:50% 0;">
+      <div style="position:absolute;inset:0;border-radius:56px;background:linear-gradient(180deg,#fafafa,#dfe3ee);box-shadow:0 50px 100px rgba(0,0,0,.6),0 0 120px rgba(255,157,28,.35)"></div>
+      <div style="position:absolute;left:0;right:0;top:0;height:200px;border-radius:56px 56px 0 0;background:linear-gradient(180deg,#ff4d4d,#c1121f);display:flex;align-items:center;justify-content:center"><span class="an" style="font-size:120px;letter-spacing:14px">SEPTEMBER</span></div>
+      <div class="an" id="B_27" style="position:absolute;left:0;right:0;top:170px;text-align:center;font-size:560px;color:#101322;line-height:1"></div>
+      <div style="position:absolute;left:90px;top:-30px;width:34px;height:90px;border-radius:20px;background:#333"></div>
+      <div style="position:absolute;right:90px;top:-30px;width:34px;height:90px;border-radius:20px;background:#333"></div>
+    </div>
+  </div>
+  <div class="abs" id="B_rib" style="left:-100px;right:-100px;top:1090px;height:120px;background:linear-gradient(90deg,var(--o),var(--g),var(--o));transform:rotate(-4deg);display:flex;align-items:center;justify-content:center;box-shadow:0 20px 60px rgba(0,0,0,.5)"><span class="an" style="font-size:78px;color:#15100a;letter-spacing:6px">FIRST BGMI TOURNAMENT</span></div>
+  <div class="abs" id="B_clock" style="left:0;top:0;width:1080px;height:1100px">
+    <svg width="1080" height="1100" viewBox="0 0 1080 1100">
+      <defs><linearGradient id="cg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd45a"/><stop offset="1" stop-color="#ff5a1f"/></linearGradient></defs>
+      <circle cx="540" cy="560" r="400" fill="rgba(0,0,0,.45)" stroke="rgba(255,255,255,.15)" stroke-width="4"/>
+      <circle id="B_ring" cx="540" cy="560" r="380" fill="none" stroke="url(#cg)" stroke-width="26" stroke-linecap="round" transform="rotate(-90 540 560)" stroke-dasharray="2388" stroke-dashoffset="2388"/>
+      <g id="B_ticks"></g>
+      
+      
+      
+    </svg>
+    <div class="ctr an" id="B_dig" style="top:560px;font-size:210px;color:#fff;text-shadow:0 0 50px rgba(255,157,28,.9)"></div>
+    <div class="ctr an" style="top:830px;font-size:64px;letter-spacing:14px;color:var(--c)">MATCH START</div>
+  </div>
+</div>
+
+<!-- C SOLO -->
+<div class="sc" id="C">
+  <div class="ctr an" id="C_solo" style="top:300px;font-size:440px;color:#fff;text-shadow:0 12px 0 #d9480f,0 24px 0 #7a2508,0 40px 60px rgba(0,0,0,.6)"></div>
+  <div class="ctr an" id="C_m" style="top:740px;font-size:150px;color:var(--g)">MATCH</div>
+  <div class="abs" id="C_feed" style="right:44px;top:250px;width:560px"></div>
+  <div class="ctr an" id="C_sk" style="top:930px;font-size:78px;letter-spacing:8px;color:var(--c)">100% YOUR SKILLS</div>
+</div>
+
+<!-- D PRIZE -->
+<div class="sc" id="D">
+  <div class="ctr" style="top:300px"><span class="chip" id="D_e" style="font-size:60px;padding:22px 54px;border-color:var(--c);color:var(--c)">ENTRY FEE &#8377;50</span></div>
+  <div class="ctr an" style="top:470px;font-size:70px;letter-spacing:10px;color:#fff" id="D_w">WINNING AMOUNT</div>
+  <div class="ctr an grad glow" id="D_500" style="top:600px;font-size:400px"></div>
+  <div class="ctr" id="D_x" style="top:1050px"><span class="chip" style="font-size:52px;background:var(--r);border-color:#fff">WIN 10X YOUR ENTRY</span></div>
+</div>
+
+<!-- E MISS -->
+<div class="sc" id="E">
+  <div class="ctr an" id="E_t1" style="top:280px;font-size:150px;color:#fff;text-shadow:0 0 50px rgba(255,157,28,.8)">OPPORTUNITY</div>
+  <div class="ctr an" id="E_t2" style="top:960px;font-size:158px;white-space:nowrap;color:var(--r);text-shadow:0 8px 0 #4a0010,0 0 60px rgba(255,46,77,.7);transform-origin:50% 50%">MISS MAT KARNA</div>
+</div>
+
+<!-- F REMINDER + DM -->
+<div class="sc" id="F">
+  <div class="abs" id="F_ph" style="left:270px;top:250px;width:540px;height:950px;border-radius:80px;background:#0b0d16;border:10px solid #2b2f44;box-shadow:0 60px 120px rgba(0,0,0,.7),0 0 100px rgba(40,224,255,.25);overflow:hidden">
+    <div style="position:absolute;left:190px;top:18px;width:150px;height:40px;border-radius:30px;background:#000"></div>
+    <div id="F_scr" style="position:absolute;inset:0;background:linear-gradient(180deg,#1a1f3a,#0b0d16)"></div>
+    <div class="an" style="position:absolute;left:0;right:0;top:110px;text-align:center;font-size:130px;color:#fff;letter-spacing:4px">27 SEP</div>
+    <div class="an" style="position:absolute;left:0;right:0;top:250px;text-align:center;font-size:88px;color:var(--g)">6:30 PM</div>
+    <div id="F_n" class="card" style="left:26px;right:26px;top:390px;height:190px;border-radius:36px;padding:26px 30px;background:rgba(255,255,255,.95);color:#111">
+      <div style="display:flex;gap:18px;align-items:center"><div style="width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,var(--o),var(--r));display:flex;align-items:center;justify-content:center"><svg width="38" height="38" viewBox="0 0 24 24" fill="#fff"><path d="M12 22a2.5 2.5 0 0 0 2.5-2.5h-5A2.5 2.5 0 0 0 12 22zm7-6V11a7 7 0 0 0-5-6.7V3a2 2 0 0 0-4 0v1.3A7 7 0 0 0 5 11v5l-2 2v1h18v-1z"/></svg></div><div><div style="font-weight:900;font-size:26px;color:#666;letter-spacing:2px">REMINDER</div><div style="font-weight:900;font-size:36px">BGMI Tournament</div></div></div>
+      <div style="font-weight:700;font-size:28px;margin-top:10px;color:#444">27 September, 6:30 PM</div>
+    </div>
+    <div id="F_set" class="an" style="position:absolute;left:60px;right:60px;top:640px;height:120px;border-radius:70px;background:linear-gradient(90deg,#20c56b,#0f9d58);display:flex;align-items:center;justify-content:center;font-size:56px;letter-spacing:3px">&#10003; REMINDER SET</div>
+  </div>
+  <div id="F_dm" class="abs" style="left:80px;right:80px;top:300px;height:780px">
+    <div class="card" style="inset:0;background:linear-gradient(180deg,rgba(20,22,40,.96),rgba(10,12,24,.96))"></div>
+    <div style="position:absolute;left:44px;top:34px;display:flex;align-items:center;gap:22px"><div style="width:96px;height:96px;border-radius:50%;background:conic-gradient(var(--o),var(--r),var(--v),var(--o));padding:6px"><div style="width:100%;height:100%;border-radius:50%;background:#101322;display:flex;align-items:center;justify-content:center" class="an"><span style="font-size:50px;color:var(--g)">B</span></div></div><div><div id="F_bn" style="font-weight:900;font-size:44px"></div><div style="font-weight:700;font-size:28px;color:#20c56b">&#9679; Active now</div></div></div>
+    <div id="F_m1" class="abs" style="right:44px;top:210px;padding:26px 40px;border-radius:44px 44px 8px 44px;background:linear-gradient(135deg,#7b3fff,#c02ce0);font-weight:900;font-size:56px">REGISTER</div>
+    <div id="F_m2" class="abs" style="left:44px;top:390px;padding:26px 40px;border-radius:44px 44px 44px 8px;background:#272b45;font-weight:700;font-size:44px;max-width:700px">Rules aur regulations send kar diye &#10003;</div>
+  </div>
+  <div class="ctr an" id="F_dmt" style="top:1110px;font-size:110px;color:var(--c);text-shadow:0 0 40px rgba(40,224,255,.7)">DM FOR REGISTRATION</div>
+</div>
+
+<!-- G RULES -->
+<div class="sc" id="G">
+  <div class="card" id="G_c" style="left:110px;right:110px;top:300px;height:820px;padding:56px 60px">
+    <div class="an" style="font-size:86px;color:var(--g);letter-spacing:4px">RULES &amp; REGULATIONS</div>
+    <div id="G_l" style="margin-top:34px"></div>
+  </div>
+  <div class="abs" id="G_sent" style="left:0;right:0;top:1080px;text-align:center"><span class="chip" style="font-size:44px;background:#0f9d58;border-color:#fff">&#10003; SENT IN YOUR DM</span></div>
+</div>
+
+<!-- H SHARE -->
+<div class="sc" id="H">
+  <div class="abs" id="H_reel" style="left:390px;top:330px;width:300px;height:530px;border-radius:36px;background:linear-gradient(160deg,#ffb020,#d9480f);box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 80px rgba(255,157,28,.5);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px"><span class="an" style="font-size:100px;color:#150e05">BGMI</span><span class="an" style="font-size:44px;color:#150e05">TOURNAMENT</span><svg width="90" height="90" viewBox="0 0 24 24" fill="#150e05"><path d="M8 5v14l11-7z"/></svg></div>
+  <div id="H_av"></div>
+  <div class="ctr an" id="H_t" style="top:990px;font-size:118px;color:#fff;text-shadow:0 0 40px rgba(255,157,28,.6)">NEXT WINNER =</div>
+  <div class="ctr an grad glow" id="H_t2" style="top:1090px;font-size:150px">TUMHARA DOST?</div>
+</div>
+
+<!-- I GAMES -->
+<div class="sc" id="I">
+  <div class="ctr an" style="top:280px;font-size:72px;letter-spacing:12px;color:var(--c)">WE HOST TOURNAMENTS FOR</div>
+  <div id="I_tiles"></div>
+  <div class="ctr" id="I_more" style="top:1080px"><span class="chip" style="font-size:52px;border-color:var(--g);color:var(--g)">+ MANY MORE GAMES</span></div>
+</div>
+
+<!-- J CTA -->
+<div class="sc" id="J">
+  <div class="ctr an" id="J_h" style="top:250px;font-size:120px;color:#fff">DON'T WAIT</div>
+  <div class="btn" id="J_b1" style="top:430px;background:linear-gradient(90deg,#ff9d1c,#ffd45a);color:#170f04"><svg class="ic" viewBox="0 0 24 24" fill="#170f04"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0 2c-4 0-8 2-8 5v3h16v-3c0-3-4-5-8-5z"/></svg>FOLLOW</div>
+  <div class="btn" id="J_b2" style="top:630px;background:linear-gradient(90deg,#28e0ff,#5b8cff);color:#04101a"><svg class="ic" viewBox="0 0 24 24" fill="#04101a"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>SHARE REEL</div>
+  <div class="btn" id="J_b3" style="top:830px;background:linear-gradient(90deg,#c02ce0,#7b3fff);color:#fff"><svg class="ic" viewBox="0 0 24 24" fill="#fff"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8l-6 4V6a2 2 0 0 1 2-2z"/></svg>DM TO JOIN</div>
+  <svg id="J_hand" class="abs" width="200" height="200" viewBox="0 0 24 24" style="left:700px;top:900px"><path fill="#fff" stroke="#000" stroke-width=".7" d="M9 11V4.5a1.5 1.5 0 0 1 3 0V10h.5V8.5a1.5 1.5 0 0 1 3 0V10h.5V9.5a1.5 1.5 0 0 1 3 0V15c0 3-2 6-6 6h-1c-2.5 0-4-1-5.3-3L3.5 14a1.3 1.3 0 0 1 2-1.6L9 15z"/></svg>
+</div>
+
+<!-- K OUTRO -->
+<div class="sc" id="K">
+  <div class="ctr an" id="K_s" style="top:330px;font-size:200px;color:#fff;text-shadow:0 12px 0 #d9480f,0 0 70px rgba(255,157,28,.7)">SEE YOU<br>IN THE</div>
+  <div class="ctr an grad glow" id="K_m" style="top:760px;font-size:330px">MATCH!</div>
+  <div class="ctr an" id="K_h" style="top:1290px;font-size:84px;letter-spacing:4px;color:#fff;text-shadow:0 6px 0 #000">FOLLOW <span style="color:var(--g)" id="K_hb"></span></div>
+  <div class="ctr" id="K_chips" style="top:1110px;display:flex;justify-content:center;gap:14px;flex-wrap:wrap;padding:0 40px"><span class="chip">27 SEP</span><span class="chip">6:30 PM</span><span class="chip" style="color:var(--c)">SOLO</span><span class="chip" style="color:var(--g)">&#8377;50 &rarr; &#8377;500</span></div>
+</div>
+
+<div id="cap"></div>
+<div id="brand"></div>
+<div id="tag"><i></i><span>BGMI SOLO TOURNAMENT</span></div>
+<div id="prog"></div>
+<div id="red"></div>
+<div id="flash"></div>
+<div id="grain"></div>
+</div>
+
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
+const Q=new URLSearchParams(location.search);
+const BRAND=Q.get('brand')||'YOUR CHANNEL';
+const DUR=51.0;
+const $=id=>document.getElementById(id);
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const P=(t,a,d)=>clamp((t-a)/d);
+const eo=x=>1-Math.pow(1-x,3), ei=x=>x*x*x, eio=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const eb=x=>{const c1=1.9,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)};
+const ee=x=>x===1?1:1-Math.pow(2,-10*x);
+const rnd=(i)=>{const s=Math.sin(i*127.1+311.7)*43758.5453;return s-Math.floor(s)};
+function tf(el,x=0,y=0,s=1,r=0,o=1){el.style.transform=`translate(${x}px,${y}px) rotate(${r}deg) scale(${s})`;el.style.opacity=o}
+brandInit();
+function brandInit(){$('brand').innerHTML='FOLLOW <b>'+BRAND+'</b>';$('F_bn').textContent=BRAND.replace(/^@/,'');$('K_hb').textContent=BRAND}
+
+/* ---------- timeline ---------- */
+const SC=[['A',0,2.4],['B',2.4,9.2],['C',9.2,13.8],['D',13.8,17.2],['E',17.2,22.2],['F',22.2,28],['G',28,31.3],['H',31.3,37.6],['I',37.6,41.8],['J',41.8,46.94],['K',46.94,DUR+1]];
+const THEME={A:[1,.35,.1],B:[1,.6,.1],C:[.15,.85,1],D:[1,.75,.2],E:[1,.15,.3],F:[.4,.4,1],G:[.15,.85,1],H:[.7,.3,1],I:[.15,.85,1],J:[1,.6,.1],K:[1,.6,.1]};
+const CUTS=SC.map(s=>s[1]).slice(1);
+
+/* ---------- captions ---------- */
+const PH=[["BGMI players,",.3,1.46],["ready ho jao!",1.46,2.39],["Kyunki 27 September ko hone wala hai hamara first BGMI tournament.",2.39,5.96],["Aur match start hoga shaam 6:30 baje.",5.96,9.19],["Sabse khas baat—",9.19,10.4],["yeh hoga solo match,",10.4,11.54],["matlab pura game tumhare skills par depend karega.",11.54,13.81],["Entry fee sirf ₹50 hai",13.81,15.6],["aur winning amount hai ₹500!",15.6,17.22],["To agar tum BGMI khelte ho,",17.22,18.66],["yeh opportunity miss mat karna.",18.66,22.22],["Abhi calendar mein 27 September,",22.22,24.1],["6:30 PM ka reminder laga lo",24.1,26.04],["aur registration ke liye humen DM karo.",26.04,27.98],["Hum tumhe tournament ke saare rules aur regulations send kar denge.",27.98,31.28],["Aur haan,",31.28,32.39],["apne BGMI wale doston ko yeh reel zaroor share karna",32.39,35.36],["kyunki ho sakta hai next winner tumhara hi dost ho.",35.36,37.56],["Hum BGMI, Free Fire aur bhi kaafi games ke tournaments host karte rehte hain.",37.56,41.83],["To late mat karo,",41.83,43.14],["follow karo,",43.14,43.87],["reel share karo",43.87,44.81],["aur participate karne ke liye humen DM karo.",44.81,46.94],["See you in the match!",46.94,47.95]];
+const HOT=/^(bgmi|27|₹50|₹500|6:30|solo|dm|winner|free|fire|follow|share|miss|skills|entry|winning|tournament|late|reel)/i;
+const CH=[];
+for(const [txt,s,e] of PH){
+  const w=txt.replace(/—/g,'').split(/\s+/).filter(Boolean);
+  const groups=[];let cur=[];
+  for(const x of w){cur.push(x);const len=cur.join(' ').length;if(cur.length>=3||len>=13){groups.push(cur);cur=[]}}
+  if(cur.length){ if(groups.length&&cur.join(' ').length<5)groups[groups.length-1].push(...cur);else groups.push(cur)}
+  const tot=groups.reduce((a,g)=>a+g.join(' ').length+2,0);let t=s;
+  for(const g of groups){const d=(e-s)*(g.join(' ').length+2)/tot;CH.push([g,t,t+d]);t+=d}
+}
+/* ---------- three ---------- */
+const R=new THREE.WebGLRenderer({canvas:$('gl'),antialias:true,preserveDrawingBuffer:true});
+R.setSize(1080,1920,false);R.setPixelRatio(1);R.toneMapping=THREE.ACESFilmicToneMapping;R.toneMappingExposure=1.15;
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x05060d);scene.fog=new THREE.FogExp2(0x05060d,.016);
+const pm=new THREE.PMREMGenerator(R);scene.environment=pm.fromScene(new RoomEnvironment(),.04).texture;
+const cam=new THREE.PerspectiveCamera(62,1080/1920,.1,400);cam.position.set(0,0,0);
+scene.add(new THREE.AmbientLight(0xffffff,.5));
+const key=new THREE.PointLight(0xffb040,900,60);key.position.set(4,6,-6);scene.add(key);
+const rim=new THREE.PointLight(0x28e0ff,700,60);rim.position.set(-6,-3,-8);scene.add(rim);
+// tunnel
+const RINGS=[],NR=30,GAP=6;const hexGeo=new THREE.CylinderGeometry(7,7,.25,6,1,true);hexGeo.rotateX(Math.PI/2);
+const edges=new THREE.EdgesGeometry(hexGeo);
+for(let i=0;i<NR;i++){const m=new THREE.LineSegments(edges,new THREE.LineBasicMaterial({color:0xff9d1c,transparent:true,opacity:.9}));m.userData.i=i;scene.add(m);RINGS.push(m)}
+// streaks
+const NP=500,pp=new Float32Array(NP*3);for(let i=0;i<NP;i++){const a=rnd(i)*6.283,r=2+rnd(i+9)*9;pp[i*3]=Math.cos(a)*r;pp[i*3+1]=Math.sin(a)*r;pp[i*3+2]=-rnd(i+3)*180}
+const pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.BufferAttribute(pp,3));
+const pts=new THREE.Points(pg,new THREE.PointsMaterial({color:0xffe6a0,size:.16,transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false}));scene.add(pts);
+// trophy
+const gold=new THREE.MeshStandardMaterial({color:0xffc233,metalness:1,roughness:.18,envMapIntensity:1.6});
+const trophy=new THREE.Group();
+const cupPts=[[0,0],[.9,.05],[1.0,.25],[.5,.4],[.35,.9],[.4,1.5],[.9,2.0],[1.7,3.4],[1.75,3.6],[1.5,3.62],[1.3,3.4],[.8,2.6],[0,2.55]].map(p=>new THREE.Vector2(p[0]*.9,p[1]*.9));
+const cup=new THREE.Mesh(new THREE.LatheGeometry(cupPts,48),gold);cup.position.y=.9;trophy.add(cup);
+const base=new THREE.Mesh(new THREE.CylinderGeometry(1.5,1.7,.6,48),new THREE.MeshStandardMaterial({color:0x1b1b26,metalness:.6,roughness:.3}));base.position.y=-.1;trophy.add(base);
+const base2=new THREE.Mesh(new THREE.CylinderGeometry(1.1,1.3,.3,48),gold);base2.position.y=.25;trophy.add(base2);
+for(const s of[-1,1]){const h=new THREE.Mesh(new THREE.TorusGeometry(.75,.12,16,40,Math.PI*1.2),gold);h.position.set(s*1.55,3.0,0);h.rotation.z=s>0?-Math.PI*.6:Math.PI*.6-Math.PI*1.2+Math.PI*1.2;h.rotation.z=s>0?-Math.PI/2-.6:Math.PI/2-.6+Math.PI;trophy.add(h)}
+const star=new THREE.Mesh(new THREE.OctahedronGeometry(.5),new THREE.MeshStandardMaterial({color:0xfff2b0,emissive:0xffb020,emissiveIntensity:1.5,metalness:.5,roughness:.2}));star.position.y=2.4;trophy.add(star);
+trophy.scale.setScalar(1.3);scene.add(trophy);
+// coins
+const NC=90,coinGeo=new THREE.CylinderGeometry(.5,.5,.12,32);coinGeo.rotateX(Math.PI/2);
+const coins=new THREE.InstancedMesh(coinGeo,gold,NC);scene.add(coins);const dm=new THREE.Object3D();
+// crosshair
+const xh=new THREE.Group();
+for(const [r,w] of [[2.4,.09],[1.7,.06],[.7,.05]]){const m=new THREE.Mesh(new THREE.TorusGeometry(r,w,16,80),new THREE.MeshBasicMaterial({color:0x28e0ff}));xh.add(m)}
+for(let i=0;i<4;i++){const b=new THREE.Mesh(new THREE.BoxGeometry(.12,1.1,.05),new THREE.MeshBasicMaterial({color:0xff2e4d}));const a=i*Math.PI/2;b.position.set(Math.sin(a)*2.4,Math.cos(a)*2.4,0);b.rotation.z=-a;xh.add(b)}
+scene.add(xh);
+// shock ring
+const shock=new THREE.Mesh(new THREE.TorusGeometry(1,.06,12,80),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true}));scene.add(shock);
+// orbit shards
+const shards=[];for(let i=0;i<26;i++){const m=new THREE.Mesh(new THREE.OctahedronGeometry(.3+rnd(i)*.4),new THREE.MeshStandardMaterial({color:i%2?0x28e0ff:0xff9d1c,metalness:.9,roughness:.2,emissive:i%2?0x0a4a5a:0x5a2a00,emissiveIntensity:.8}));m.userData.s=i;scene.add(m);shards.push(m)}
+
+function sceneOf(t){for(const s of SC)if(t>=s[1]&&t<s[2])return s;return SC[SC.length-1]}
+let curCol=new THREE.Color(1,.35,.1),lastT=-1;
+function kick(t){let k=0;for(const c of CUTS){const d=t-c;if(d>0&&d<1.2)k+=Math.exp(-d*4.5)}const d=t;if(d<1)k+=Math.exp(-d*4);return k}
+function draw3d(t,sc){
+  const th=THEME[sc[0]];const target=new THREE.Color(th[0],th[1],th[2]);
+  curCol.lerp(target,.2);
+  const k=kick(t);const z=t*14+k*10;
+  for(const r of RINGS){const i=r.userData.i;let pz=-(((i*GAP-z)%(NR*GAP)+NR*GAP)%(NR*GAP));r.position.z=pz-2;r.rotation.z=i*.3+t*.25*(i%2?1:-1);const f=clamp(1-(-pz)/(NR*GAP));r.material.opacity=clamp(f*1.4)*.95;r.material.color.copy(curCol).lerp(new THREE.Color(.16,.88,1),(i%3===0)?.6:0);r.scale.setScalar(1+.08*Math.sin(t*3+i))}
+  const a=pg.attributes.position;for(let i=0;i<NP;i++){let zz=(pp[i*3+2]+z*2.2)%180;a.array[i*3+2]=zz-180+ (zz<0?180:0)-0}
+  a.needsUpdate=true;pts.material.color.copy(curCol).lerp(new THREE.Color(1,1,1),.5);
+  // camera shake
+  const sh=k*.09;cam.position.set((rnd(t*60)-.5)*sh,(rnd(t*60+7)-.5)*sh,0);cam.rotation.z=Math.sin(t*.7)*.03+(rnd(t*90)-.5)*k*.03;
+  // hide all
+  trophy.visible=coins.visible=xh.visible=shock.visible=false;shards.forEach(s=>s.visible=false);
+  const n=sc[0],lt=t-sc[1];
+  if(n==='E'||n==='H'&&false){trophy.visible=true;const p=eb(P(lt,0,.7));trophy.position.set(0,-.6,-11);trophy.scale.setScalar(.85*p+.001);trophy.rotation.y=t*1.6;trophy.position.y=-1.4+Math.sin(t*2)*.25}
+  if(n==='E'){shards.forEach((s,i)=>{s.visible=true;const a=t*.9+i*.24,r=4+ (i%5)*.6;s.position.set(Math.cos(a)*r,Math.sin(a*1.3)*4.5,-11-Math.sin(a)*3);s.rotation.set(t*2+i,t*1.5,i)})}
+  if(n==='D'){coins.visible=true;const st=15.4;for(let i=0;i<NC;i++){const t0=st+rnd(i)*1.4,tt=Math.max(0,t-t0);const x=(rnd(i+50)-.5)*10,y=8-tt*tt*11-rnd(i+9)*2,zc=-9-rnd(i+70)*8;dm.position.set(x+ (rnd(i+3)-.5)*tt*2,y,zc);dm.rotation.set(tt*6+i,tt*4,0);dm.scale.setScalar(t<t0?.0001:1);dm.updateMatrix();coins.setMatrixAt(i,dm.matrix)}coins.instanceMatrix.needsUpdate=true}
+  if(n==='C'){xh.visible=true;const lock=eo(P(lt,0,1.0));xh.scale.setScalar(3-2.0*lock+.001);xh.position.set(0,1.2,-9);xh.rotation.z=(1-lock)*3+t*.4;shock.visible=lt>1.3&&lt<2.3;const sp=P(lt,1.3,1);shock.scale.setScalar(.5+sp*8);shock.position.set(0,1.2,-9);shock.material.opacity=(1-sp)*.9}
+  if(n==='A'){shock.visible=true;const q=t<1.46?P(t,.05,.6):P(t,1.46,.7);shock.scale.setScalar(.5+q*14);shock.position.set(0,1.5,-8);shock.material.opacity=(1-q)*.9;shock.material.color.set(t<1.46?0xff9d1c:0xff2e4d)}
+  if(n==='K'){trophy.visible=true;const p=eb(P(lt,.1,.8));trophy.position.set(0,-9,-15);trophy.scale.setScalar(1.3*p+.001);trophy.rotation.y=t*1.4}
+  key.color.copy(curCol);
+  R.render(scene,cam);
+}
+/* ---------- overlay scenes ---------- */
+const ext=(c,d,ang=90)=>{let s=[];for(let i=1;i<=d;i++)s.push(`0 ${i}px 0 ${c}`);return s.join(',')+',0 '+(d+22)+'px 50px rgba(0,0,0,.55)'};
+$('B_ticks').innerHTML=Array.from({length:12},(_,i)=>{const a=i*30*Math.PI/180;return `<line x1="${540+Math.sin(a)*340}" y1="${560-Math.cos(a)*340}" x2="${540+Math.sin(a)*(i%3?314:296)}" y2="${560-Math.cos(a)*(i%3?314:296)}" stroke="#fff" stroke-width="${i%3?5:9}" stroke-linecap="round" opacity=".8"/>`}).join('');
+$('G_l').innerHTML=['Solo match format','Fair play only','Room ID & timing in DM','Prize: ₹500 to the winner','Entry fee ₹50'].map((x,i)=>`<div id="G_r${i}" style="display:flex;gap:26px;align-items:center;font-weight:900;font-size:50px;margin:30px 0"><span id="G_k${i}" style="width:70px;height:70px;border-radius:20px;background:#0f9d58;display:flex;align-items:center;justify-content:center;font-size:48px;flex:none">&#10003;</span>${x}</div>`).join('');
+$('H_av').innerHTML=[[70,800,'A'],[380,960,'R'],[690,800,'S']].map(([x,y,l],i)=>`<div id="H_a${i}" class="abs" style="left:${x}px;top:${y-110}px;width:320px;text-align:center"><div style="width:190px;height:190px;border-radius:50%;margin:0 auto;background:conic-gradient(var(--o),var(--r),var(--v),var(--c),var(--o));padding:8px"><div style="width:100%;height:100%;border-radius:50%;background:#12152a;display:flex;align-items:center;justify-content:center;font-family:Anton;font-size:100px">${l}</div></div><div id="H_c${i}" style="margin-top:16px;display:inline-block;padding:14px 26px;border-radius:30px;background:#272b45;font-weight:900;font-size:34px">Bro dekh!</div></div>`).join('');
+$('I_tiles').innerHTML=[['BGMI','#ff9d1c','#d9480f'],['FREE FIRE','#ff4d2e','#a1120b'],['+ MORE','#28e0ff','#3b5bff']].map(([n,a,b],i)=>`<div id="I_t${i}" class="abs" style="left:${140}px;right:140px;top:${400+i*225}px;height:190px;border-radius:44px;background:linear-gradient(120deg,${a},${b});box-shadow:0 25px 60px rgba(0,0,0,.5),inset 0 3px 0 rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center"><span class="an" style="font-size:118px;color:#fff;text-shadow:0 6px 0 rgba(0,0,0,.35)">${n}</span></div>`).join('');
+$('C_feed').innerHTML=['YOU eliminated Player_07','YOU eliminated Player_23'].map((x,i)=>`<div id="C_f${i}" style="margin-bottom:14px;padding:14px 24px;border-left:8px solid var(--r);background:rgba(0,0,0,.6);font-weight:900;font-size:30px">${x}</div>`).join('');
+
+const ALL=SC.map(s=>s[0]);
+const EXL=[['A_b','#a63a08',26],['D_500','#a63a08',26],['H_t2','#a63a08',18],['K_m','#a63a08',24]];
+for(const [id] of EXL){const e=$(id),x=e.cloneNode(true);x.id=id+'_x';x.className=e.className.replace('grad','').replace('glow','');e.parentNode.insertBefore(x,e)}
+function syncExt(){for(const [id,c,d] of EXL){const e=$(id),x=$(id+'_x');x.textContent=e.textContent;x.style.cssText=e.style.cssText;x.style.color=c;x.style.textShadow=ext(c,d);x.style.background='none';x.style.webkitBackgroundClip='border-box';x.style.filter='drop-shadow(0 0 28px rgba(255,157,28,.5))';x.style.display=e.style.display}
+ for(const [id] of EXL){$(id).style.textShadow='none'}}
+function overlay(t,sc){
+  const n=sc[0],lt=t-sc[1],dur=sc[2]-sc[1];
+  for(const id of ALL){$(id).style.opacity=id===n?1:0}
+  const fadeOut=clamp((sc[2]-t)/.001);
+  // ---- A
+  if(n==='A'){
+    const inb=t<1.46;
+    const s=3.2-2.2*eo(P(t,.05,.22));
+    const b=$('A_b'),p=$('A_p'),r=$('A_r'),tg=$('A_tag');
+    b.textContent='BGMI';p.textContent='PLAYERS';r.textContent='READY HO JAO!';
+    b.style.textShadow=ext('#a63a08',26);
+    const gl=(t>.05&&t<.4)?(rnd(Math.floor(t*30))-.5)*30:0;
+    tf(b,gl,0,t<1.46?Math.max(s,1):1+.1*Math.sin((t-1.46)*20)*Math.exp(-(t-1.46)*4)+0,0,t<.05?0:1);
+    if(t>=1.46){tf(b,0,-40-eo(P(t,1.46,.3))*40,.7,0,1)}
+    tf(p,(1-eo(P(t,.25,.3)))*-900,0,1,0,inb?1:0);
+    p.style.webkitTextStroke='0';p.style.textShadow='0 10px 0 #000,0 0 40px rgba(255,255,255,.35)';
+    const rp=eb(P(t,1.46,.3));tf(r,0,0,rp,(1-rp)*-8,t>=1.46?1:0);
+    r.style.color=(Math.floor(t*10)%2)?'#ff2e4d':'#fff';r.style.textShadow='0 10px 0 #4a0010,0 0 60px rgba(255,46,77,.8)';r.style.top='830px';
+    tf(tg,0,0,1,0,.5+.5*(Math.floor(t*8)%2));
+  }
+  // ---- B
+  if(n==='B'){
+    const calOn=lt<3.85;
+    $('B_cal').style.display=calOn?'block':'none';$('B_rib').style.display=calOn?'block':'none';$('B_clock').style.display=calOn?'none':'block';
+    if(calOn){
+      const f=eb(P(lt,0,.55));$('B_calin').style.transform=`rotateX(${(1-f)*-95}deg) scale(${.7+.3*f})`;$('B_calin').style.opacity=clamp(lt/.1);
+      $('B_27').textContent='27';$('B_27').style.textShadow='0 10px 0 #b8bcc9,0 20px 30px rgba(0,0,0,.25)';
+      const rb=eo(P(lt,1.5,.4));tf($('B_rib'),(1-rb)*1300,0,1,-4,1);
+      $('B_cal').style.transform=`translateY(${Math.sin(t*2)*8}px) scale(${1+.03*P(lt,0,3.8)})`;
+    }else{
+      const q=lt-3.85;
+      const cs=eb(P(q,0,.5));$('B_clock').style.transform=`scale(${.6+.4*cs}) translateY(140px)`;$('B_clock').style.opacity=clamp(q/.15);
+      const ring=$('B_ring');const pr=eio(P(q,.2,1.6));ring.setAttribute('stroke-dashoffset',2388*(1-pr*.5));
+      const hh=(6+.5*eio(P(q,.2,1.5)))*30, mh=eio(P(q,.2,1.5))*180+ (q>1.7?(q-1.7)*6:0);
+      
+      $('B_dig').textContent='6:30 PM';$('B_dig').style.fontSize='190px';
+    }
+  }
+  // ---- C
+  if(n==='C'){
+    const s=$('C_solo');s.textContent='SOLO';
+    const p=eb(P(lt,0,.5));tf(s,0,0,p,(1-p)*6,clamp(lt/.05));
+    const m=$('C_m');tf(m,(1-eo(P(lt,.35,.35)))*-800,0,1,0,1);
+    tf($('C_sk'),0,(1-eo(P(lt,2.3,.4)))*60,1,0,P(lt,2.3,.3));
+    tf($('C_f0'),(1-eo(P(lt,1.4,.3)))*700,0,1,0,1);tf($('C_f1'),(1-eo(P(lt,2.1,.3)))*700,0,1,0,1);
+  }
+  // ---- D
+  if(n==='D'){
+    tf($('D_e'),0,(1-eo(P(lt,0,.3)))*-200,1,0,P(lt,0,.2));
+    tf($('D_w'),0,0,1,0,P(lt,1.2,.2));
+    const b=$('D_500');const v=lt<1.7?50:Math.round(50+450*eo(P(lt,1.7,1.2)));b.textContent='₹'+v;
+    const pop=lt<1.7?eb(P(lt,.15,.4)):1+.08*Math.exp(-(lt-2.9)*6)*(lt>2.9?1:0);
+    tf(b,0,0,.5+.5*pop*(lt<1.7?1:1),0,1);b.style.fontSize=(lt<1.7?330:400)+'px';
+    tf($('D_x'),0,0,eb(P(lt,2.6,.4)),0,P(lt,2.6,.15));
+    $('D_w').style.top='470px';
+  }
+  // ---- E
+  if(n==='E'){
+    const p=eb(P(lt,.3,.5));tf($('E_t1'),0,0,p,0,P(lt,.3,.2));
+    const st=eb(P(lt,2.7,.35));tf($('E_t2'),0,0,(1.8-.8*st)*(lt>2.7?1:.001),(1-st)*-10,P(lt,2.7,.1));
+    $('E_t2').style.opacity=lt>2.7?1:0;
+  }
+  // ---- F
+  if(n==='F'){
+    const phOn=lt<3.8;
+    $('F_ph').style.display=phOn?'block':'none';$('F_dm').style.display=phOn?'none':'block';$('F_dmt').style.display=phOn?'none':'block';
+    if(phOn){
+      const p=eb(P(lt,0,.5));tf($('F_ph'),0,(1-p)*900,1,(1-p)*8,1);
+      const nt=eb(P(lt,.5,.4));tf($('F_n'),0,(1-nt)*-300,1+.0,0,P(lt,.5,.15));
+      $('F_n').style.transform+=` rotate(${Math.sin(lt*40)*3*(lt>.9&&lt<1.6?1:0)}deg)`;
+      tf($('F_set'),0,0,eb(P(lt,2.0,.35)),0,P(lt,2.0,.1));
+    }else{
+      const q=lt-3.8;const p=eb(P(q,0,.5));tf($('F_dm'),0,(1-p)*900,1,0,1);
+      tf($('F_m1'),(1-eo(P(q,.5,.3)))*500,0,1,0,P(q,.5,.1));tf($('F_m2'),(1-eo(P(q,1.1,.3)))*-500,0,1,0,P(q,1.1,.1));
+      tf($('F_dmt'),0,0,eb(P(q,.2,.4)),0,P(q,.2,.1));
+    }
+  }
+  // ---- G
+  if(n==='G'){
+    tf($('G_c'),0,(1-eb(P(lt,0,.5)))*900,1,0,1);
+    for(let i=0;i<5;i++){const a=P(lt,.4+i*.35,.25);tf($('G_r'+i),(1-eo(a))*300,0,1,0,a);const k=$('G_k'+i);k.style.transform=`scale(${eb(P(lt,.65+i*.35,.25))})`}
+    tf($('G_sent'),0,(1-eb(P(lt,2.4,.35)))*200,1,0,P(lt,2.4,.1));
+  }
+  // ---- H
+  if(n==='H'){
+    const p=eb(P(lt,0,.5));const fly=eio(P(lt,.9,.9));
+    tf($('H_reel'),0,(1-p)*-900-fly*150,1-fly*.5,(1-p)*-30+fly*8,1);
+    for(let i=0;i<3;i++){const a=eb(P(lt,1.5+i*.25,.4));tf($('H_a'+i),0,0,a,0,P(lt,1.5+i*.25,.1));const c=$('H_c'+i);c.style.opacity=P(lt,2.1+i*.25,.15);c.style.transform=`scale(${eb(P(lt,2.1+i*.25,.3))})`}
+    const w=eb(P(lt,4.1,.35));tf($('H_t'),0,0,w,0,P(lt,4.1,.1));$('H_t').style.top='1000px';
+    const w2=eb(P(lt,4.5,.35));tf($('H_t2'),0,0,w2,0,P(lt,4.5,.1));
+    $('H_t2').style.textShadow=ext('#a63a08',18);$('H_t').style.textShadow='0 8px 0 #000';
+    $('H_a1').style.transform+=lt>4.5?` translateY(${-30*Math.abs(Math.sin((lt-4.5)*6))}px)`:'';
+  }
+  // ---- I
+  if(n==='I'){
+    for(let i=0;i<3;i++){const a=eb(P(lt,.35+i*.45,.45));tf($('I_t'+i),(i%2?1:-1)*(1-eo(P(lt,.35+i*.45,.4)))*1200,0,1,(i%2?1:-1)*(1-a)*4,1)}
+    tf($('I_more'),0,0,eb(P(lt,2.4,.4)),0,P(lt,2.4,.1));
+  }
+  // ---- J
+  if(n==='J'){
+    const btn=(id,a)=>{const p=eb(P(lt,a,.45));const pulse=lt>a+.5?1+.04*Math.sin((lt-a)*9):1;tf($(id),(1-eo(P(lt,a,.35)))*1300,0,p*pulse,0,1)};
+    btn('J_b1',.15);btn('J_b2',2.05);btn('J_b3',3.0);
+    tf($('J_h'),0,0,eb(P(lt,0,.4)),0,1);
+    const hy=[500,700,900],hi=lt<2.05?0:lt<3.0?1:2;const tap=Math.abs(Math.sin(lt*7));
+    $('J_hand').style.top=(hy[hi]+30+tap*30)+'px';$('J_hand').style.left=(700+Math.sin(lt*3)*20)+'px';$('J_hand').style.opacity=P(lt,.6,.2)
+  }
+  // ---- K
+  if(n==='K'){
+    tf($('K_s'),0,0,eb(P(lt,0,.5)),0,1);
+    tf($('K_m'),0,0,eb(P(lt,.35,.5)),0,P(lt,.35,.1));$('K_m').style.textShadow=ext('#a63a08',24);
+    tf($('K_chips'),0,(1-eo(P(lt,1.0,.4)))*100,1,0,P(lt,1.0,.3));tf($('K_h'),0,(1-eo(P(lt,1.6,.4)))*80,1,0,P(lt,1.6,.3));$('K_chips').style.top='1110px';
+  }
+}
+function captions(t){syncExt();
+  const c=$('cap');
+  const cur=CH.find(x=>t>=x[1]&&t<x[2]);
+  if(!cur){c.innerHTML='';return}
+  const lt=t-cur[1];const pop=eb(clamp(lt/.16));
+  c.innerHTML=cur[0].map((w,i)=>`<span class="capw ${HOT.test(w.replace(/[^\w₹:]/g,''))?'hot':''}" style="transform:scale(${.55+.45*eb(clamp((lt-i*.05)/.16))});opacity:${clamp((lt-i*.05)/.06)}">${w.replace(/[,!.]/g,'')}</span>`).join('');
+}
+function globals(t,sc){
+  const k=kick(t);
+  const fl=(()=>{let f=0;for(const c of CUTS){const d=t-c;if(d>=0&&d<.18)f=Math.max(f,1-d/.18)}if(t<.09)f=Math.max(f,.9);return f})();
+  $('flash').style.opacity=fl*.75;
+  $('stage').style.transform=`translate(${(rnd(t*77)-.5)*k*14}px,${(rnd(t*77+3)-.5)*k*14}px) scale(${1+k*.012})`;
+  $('prog').style.width=(t/DUR*1080)+'px';
+  const red=(sc[0]==='A'&&t>1.4&&t<2.4)?(.3+.4*Math.abs(Math.sin(t*14))):(sc[0]==='E'&&t>19.8?.25*Math.abs(Math.sin(t*10)):0);
+  $('red').style.opacity=red;
+  $('cap').style.display=(t>=DUR-3.05)?'none':'block';
+  $('brand').style.opacity=(sc[0]==='K'||t<.3)?0:.95;
+  $('tag').style.opacity=(sc[0]==='A'||sc[0]==='K')?0:1;
+}
+window.setT=function(t){const sc=sceneOf(t);draw3d(t,sc);overlay(t,sc);captions(t);globals(t,sc);return sc[0]};
+window.DUR=DUR;window.ready=true;
+document.fonts.ready.then(()=>{window.fontsOk=true});
+setT(0);
+</script>
+</body></html>
